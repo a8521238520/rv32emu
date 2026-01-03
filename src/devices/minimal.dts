@@ -65,6 +65,12 @@
             /* the baudrate divisor is ignored */
         };
 
+        rng0: virtio@b000000 {
+            compatible = "virtio,mmio";
+            reg = <0xb000000 0x200>;
+            interrupts = <2>;
+        };
+
         /*
          * Virtio block example subnode
          * The actual subnode are generated dynamically depends on the CLI -x vblk option

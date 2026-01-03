@@ -520,6 +520,11 @@ static void rv_fsync_device()
         free(attr->vblk);
         free(attr->disk);
     }
+
+    if (attr->vrng.rng_fd >= 0) {
+        close(attr->vrng.rng_fd);
+        attr->vrng.rng_fd = -1;
+    }
 }
 #endif /* RV32_HAS(SYSTEM) && !RV32_HAS(ELF_LOADER) */
 
@@ -700,6 +705,10 @@ riscv_t *rv_create(riscv_user_t rv_attr)
     assert(attr->uart);
     attr->uart->in_fd = attr->fd_stdin;
     attr->uart->out_fd = attr->fd_stdout;
+
+    /* setup virtio-rng */
+    attr->vrng.ram = (uint32_t *) attr->mem->mem_base;
+    virtio_rng_init(&attr->vrng);
 
     /* setup virtio-blk */
     attr->vblk_mmio_base_hi = 0x41;

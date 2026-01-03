@@ -505,6 +505,9 @@ typedef struct {
     uint32_t vblk_mmio_max_hi;
     int vblk_irq_base;
     int vblk_cnt;
+
+    /* virtio-rng device */
+    virtio_rng_state_t vrng;
 #endif /* RV32_HAS(SYSTEM) && !RV32_HAS(ELF_LOADER) */
 
     /* vm memory object */

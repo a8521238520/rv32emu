@@ -20,6 +20,7 @@
 #define VIRTIO_DESC_F_WRITE 2
 
 #define VIRTIO_BLK_DEV_ID 2
+#define VIRTIO_RNG_DEV_ID 4
 #define VIRTIO_BLK_T_IN 0
 #define VIRTIO_BLK_T_OUT 1
 #define VIRTIO_BLK_T_FLUSH 4
@@ -35,6 +36,9 @@
 
 /* TODO: support more features */
 #define VIRTIO_BLK_F_RO (1 << 5)
+
+#define IRQ_VRNG_SHIFT 2
+#define IRQ_VRNG_BIT (1 << IRQ_VRNG_SHIFT)
 
 /* VirtIO MMIO registers */
 #define VIRTIO_REG_LIST                  \
@@ -119,3 +123,34 @@ uint32_t *virtio_blk_init(virtio_blk_state_t *vblk,
 virtio_blk_state_t *vblk_new();
 
 void vblk_delete(virtio_blk_state_t *vblk);
+
+typedef struct {
+    uint32_t queue_num;
+    uint32_t queue_desc;
+    uint32_t queue_avail;
+    uint32_t queue_used;
+    uint16_t last_avail;
+    bool ready;
+} virtio_rng_queue_t;
+
+typedef struct {
+    /* feature negotiation */
+    uint32_t device_features_sel;
+    uint32_t driver_features;
+    uint32_t driver_features_sel;
+    /* queue config */
+    uint32_t queue_sel;
+    virtio_rng_queue_t queues[1];
+    /* status */
+    uint32_t status;
+    uint32_t interrupt_status;
+    /* supplied by environment */
+    uint32_t *ram;
+    int rng_fd;
+} virtio_rng_state_t;
+
+uint32_t virtio_rng_read(virtio_rng_state_t *vrng, uint32_t addr);
+
+void virtio_rng_write(virtio_rng_state_t *vrng, uint32_t addr, uint32_t value);
+
+void virtio_rng_init(virtio_rng_state_t *vrng);
