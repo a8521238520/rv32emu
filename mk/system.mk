@@ -24,7 +24,7 @@ DTC_PATH := $(shell command -v $(DTC) 2>/dev/null)
 BUILD_DTB := $(OUT)/minimal.dtb
 
 # Device Tree compilation
-$(BUILD_DTB): $(DEV_SRC)/minimal.dts | $(OUT)
+$(BUILD_DTB): $(DEV_SRC)/minimal.dts $(CONFIG_STAMP) | $(OUT)
 	$(VECHO) " DTC\t$@\n"
 	$(Q)if [ -z "$(DTC_PATH)" ]; then \
 		echo "Error: dtc (device tree compiler) not found. Install device-tree-compiler (e.g., apt-get install device-tree-compiler)."; \
@@ -44,7 +44,7 @@ else
 endif
 
 BUILD_DTB2C := src/minimal_dtb.h
-$(BUILD_DTB2C): $(BIN_TO_C) $(BUILD_DTB)
+$(BUILD_DTB2C): $(BIN_TO_C) $(BUILD_DTB) $(CONFIG_STAMP)
 	$(VECHO) "  BIN2C\t$@\n"
 	$(Q)$(BIN_TO_C) $(BUILD_DTB) > $@
 

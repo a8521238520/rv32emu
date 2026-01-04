@@ -320,15 +320,32 @@ static void load_dtb(char **ram_loc, vm_attr_t *attr)
 
 #define DTB_EXPAND_SIZE 1024 /* or more if needed */
 
+    int header_err = fdt_check_header(minimal);
+    if (header_err != 0) {
+        rv_log_error("minimal DTB header check failed: %s\n",
+                     fdt_strerror(header_err));
+        rv_log_error(
+            "Regenerate minimal_dtb.h by rerunning the system build.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t minimal_len = fdt_totalsize(minimal);
+    if (minimal_len > ARRAY_SIZE(minimal)) {
+        rv_log_error("minimal DTB size mismatch (totalsize %zu > blob %zu)\n",
+                     minimal_len, ARRAY_SIZE(minimal));
+        rv_log_error(
+            "Regenerate minimal_dtb.h by rerunning the system build.\n");
+        exit(EXIT_FAILURE);
+    }
+
     /* Allocate enough memory for DTB + extra room */
-    size_t minimal_len = ARRAY_SIZE(minimal);
     void *dtb_buf = calloc(minimal_len + DTB_EXPAND_SIZE, sizeof(uint8_t));
     assert(dtb_buf);
 
     /* Expand it to a usable DTB blob */
     err = fdt_open_into(minimal, dtb_buf, minimal_len + DTB_EXPAND_SIZE);
     if (err < 0) {
-        rv_log_error("fdt_open_into fails\n");
+        rv_log_error("fdt_open_into failed: %s\n", fdt_strerror(err));
         exit(EXIT_FAILURE);
     }
 
