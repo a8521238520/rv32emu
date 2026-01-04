@@ -22,6 +22,7 @@ DEV_OUT := $(OUT)/devices
 DTC ?= dtc
 DTC_PATH := $(shell command -v $(DTC) 2>/dev/null)
 BUILD_DTB := $(OUT)/minimal.dtb
+_CLEAN_EMPTY_DTB := $(shell [ -f "$(BUILD_DTB)" ] && [ ! -s "$(BUILD_DTB)" ] && rm -f "$(BUILD_DTB)")
 
 # Device Tree compilation
 $(BUILD_DTB): $(DEV_SRC)/minimal.dts $(CONFIG_STAMP) | $(OUT)
