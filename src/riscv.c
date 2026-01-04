@@ -307,7 +307,7 @@ static char *realloc_property(char *fdt,
     return fdt;
 }
 
-static const char *fdt_err_to_str(int err)
+static const char *fdt_strerror(int err)
 {
     switch (err) {
     case FDT_ERR_NOTFOUND:
@@ -367,7 +367,7 @@ static void load_dtb(char **ram_loc, vm_attr_t *attr)
     int header_err = fdt_check_header(minimal);
     if (header_err != 0) {
         rv_log_error("minimal DTB header check failed: %s (%d)\n",
-                     fdt_err_to_str(header_err), header_err);
+                     fdt_strerror(header_err), header_err);
         rv_log_error(
             "Regenerate minimal_dtb.h by rerunning the system build.\n");
         exit(EXIT_FAILURE);
@@ -389,8 +389,7 @@ static void load_dtb(char **ram_loc, vm_attr_t *attr)
     /* Expand it to a usable DTB blob */
     err = fdt_open_into(minimal, dtb_buf, minimal_len + DTB_EXPAND_SIZE);
     if (err < 0) {
-        rv_log_error("fdt_open_into failed: %s (%d)\n", fdt_err_to_str(err),
-                     err);
+        rv_log_error("fdt_open_into failed: %s (%d)\n", fdt_strerror(err), err);
         exit(EXIT_FAILURE);
     }
 
