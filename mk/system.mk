@@ -52,6 +52,14 @@ $(BUILD_DTB2C): $(BIN_TO_C) $(BUILD_DTB) $(CONFIG_STAMP)
 	$(VECHO) "  BIN2C\t$@\n"
 	$(Q)$(BIN_TO_C) $(BUILD_DTB) > $@
 
+.PHONY: dtb2c-check
+dtb2c-check: $(BUILD_DTB2C)
+	$(Q)if [ ! -s "$(BUILD_DTB2C)" ]; then \
+		echo "Error: generated minimal_dtb.h is empty. Removing and aborting so it can be regenerated."; \
+		rm -f "$(BUILD_DTB2C)"; \
+		exit 1; \
+	fi
+
 # Device object compilation
 $(DEV_OUT):
 	$(Q)mkdir -p $@

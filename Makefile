@@ -329,7 +329,7 @@ include mk/wasm.mk
 # Ensure generated DTB header exists before compiling system-mode riscv.o.
 ifeq ($(CONFIG_SYSTEM),y)
 ifneq ($(CONFIG_ELF_LOADER),y)
-$(OUT)/riscv.o: $(BUILD_DTB2C)
+$(OUT)/riscv.o: dtb2c-check
 endif
 endif
 
