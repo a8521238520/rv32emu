@@ -30,9 +30,23 @@ $(BUILD_DTB): $(DEV_SRC)/minimal.dts $(CONFIG_STAMP) | $(OUT)
 		echo "Error: dtc (device tree compiler) not found. Install device-tree-compiler (e.g., apt-get install device-tree-compiler)."; \
 		exit 127; \
 	fi
-	$(Q)$(CC) -nostdinc -E -P -x assembler-with-cpp -undef $(CFLAGS_dt) $^ | $(DTC_PATH) - > $@
-	$(Q)if [ ! -s "$@" ]; then \
+	$(Q)pp="$(OUT)/minimal.dts.pp"; \
+	$(CC) -nostdinc -E -P -x assembler-with-cpp -undef $(CFLAGS_dt) $< > $$pp; \
+	if [ ! -s "$$pp" ]; then \
+		echo "Error: preprocessed DTS is empty. Check the DTS/CFLAGS_dt preprocessing output."; \
+		rm -f "$$pp" "$@"; \
+		exit 1; \
+	fi; \
+	$(DTC_PATH) -I dts -O dtb -o "$@" "$$pp"; \
+	status=$$?; \
+	rm -f "$$pp"; \
+	if [ $$status -ne 0 ]; then \
+		rm -f "$@"; \
+		exit $$status; \
+	fi; \
+	if [ ! -s "$@" ]; then \
 		echo "Error: generated DTB is empty. Check the DTS/DTC output above."; \
+		rm -f "$@"; \
 		exit 1; \
 	fi
 
