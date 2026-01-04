@@ -31,6 +31,10 @@ $(BUILD_DTB): $(DEV_SRC)/minimal.dts $(CONFIG_STAMP) | $(OUT)
 		exit 127; \
 	fi
 	$(Q)$(CC) -nostdinc -E -P -x assembler-with-cpp -undef $(CFLAGS_dt) $^ | $(DTC_PATH) - > $@
+	$(Q)if [ ! -s "$@" ]; then \
+		echo "Error: generated DTB is empty. Check the DTS/DTC output above."; \
+		exit 1; \
+	fi
 
 # Native compiler for build tools (emcc generates wasm, need native for tools)
 NATIVE_CC := $(shell which gcc 2>/dev/null || which clang 2>/dev/null)
