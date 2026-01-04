@@ -307,7 +307,7 @@ static char *realloc_property(char *fdt,
     return fdt;
 }
 
-static const char *fdt_strerror(int err)
+__attribute__((weak)) const char *fdt_strerror(int err)
 {
     switch (err) {
     case FDT_ERR_NOTFOUND:
