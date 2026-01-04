@@ -307,6 +307,50 @@ static char *realloc_property(char *fdt,
     return fdt;
 }
 
+static const char *fdt_err_to_str(int err)
+{
+    switch (err) {
+    case FDT_ERR_NOTFOUND:
+        return "not found";
+    case FDT_ERR_EXISTS:
+        return "exists";
+    case FDT_ERR_NOSPACE:
+        return "no space";
+    case FDT_ERR_BADOFFSET:
+        return "bad offset";
+    case FDT_ERR_BADPATH:
+        return "bad path";
+    case FDT_ERR_BADPHANDLE:
+        return "bad phandle";
+    case FDT_ERR_BADSTATE:
+        return "bad state";
+    case FDT_ERR_TRUNCATED:
+        return "truncated";
+    case FDT_ERR_BADMAGIC:
+        return "bad magic";
+    case FDT_ERR_BADVERSION:
+        return "bad version";
+    case FDT_ERR_BADSTRUCTURE:
+        return "bad structure";
+    case FDT_ERR_BADLAYOUT:
+        return "bad layout";
+    case FDT_ERR_INTERNAL:
+        return "internal";
+    case FDT_ERR_BADNCELLS:
+        return "bad number of cells";
+    case FDT_ERR_BADVALUE:
+        return "bad value";
+    case FDT_ERR_BADOVERLAY:
+        return "bad overlay";
+    case FDT_ERR_NOPHANDLES:
+        return "no phandles";
+    case FDT_ERR_BADFLAGS:
+        return "bad flags";
+    default:
+        return "unknown";
+    }
+}
+
 static void load_dtb(char **ram_loc, vm_attr_t *attr)
 {
 #include "minimal_dtb.h"
@@ -322,8 +366,8 @@ static void load_dtb(char **ram_loc, vm_attr_t *attr)
 
     int header_err = fdt_check_header(minimal);
     if (header_err != 0) {
-        rv_log_error("minimal DTB header check failed: %s\n",
-                     fdt_strerror(header_err));
+        rv_log_error("minimal DTB header check failed: %s (%d)\n",
+                     fdt_err_to_str(header_err), header_err);
         rv_log_error(
             "Regenerate minimal_dtb.h by rerunning the system build.\n");
         exit(EXIT_FAILURE);
@@ -345,7 +389,8 @@ static void load_dtb(char **ram_loc, vm_attr_t *attr)
     /* Expand it to a usable DTB blob */
     err = fdt_open_into(minimal, dtb_buf, minimal_len + DTB_EXPAND_SIZE);
     if (err < 0) {
-        rv_log_error("fdt_open_into failed: %s\n", fdt_strerror(err));
+        rv_log_error("fdt_open_into failed: %s (%d)\n", fdt_err_to_str(err),
+                     err);
         exit(EXIT_FAILURE);
     }
 
