@@ -48,6 +48,7 @@ else
 endif
 
 BUILD_DTB2C := src/minimal_dtb.h
+_CLEAN_EMPTY_DTB2C := $(shell [ -f "$(BUILD_DTB2C)" ] && [ ! -s "$(BUILD_DTB2C)" ] && rm -f "$(BUILD_DTB2C)")
 $(BUILD_DTB2C): $(BIN_TO_C) $(BUILD_DTB) $(CONFIG_STAMP)
 	$(VECHO) "  BIN2C\t$@\n"
 	$(Q)$(BIN_TO_C) $(BUILD_DTB) > $@
