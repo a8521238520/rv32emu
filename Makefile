@@ -326,6 +326,13 @@ include mk/artifact.mk
 include mk/system.mk
 include mk/wasm.mk
 
+# Ensure generated DTB header exists before compiling system-mode riscv.o.
+ifeq ($(CONFIG_SYSTEM),y)
+ifneq ($(CONFIG_ELF_LOADER),y)
+$(OUT)/riscv.o: $(BUILD_DTB2C)
+endif
+endif
+
 # Build Targets
 
 DTB_DEPS :=
