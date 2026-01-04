@@ -65,7 +65,7 @@
             /* the baudrate divisor is ignored */
         };
 
-        rng0: virtio@b000000 {
+        virtio@b000000 {
             compatible = "virtio,mmio";
             reg = <0xb000000 0x200>;
             interrupts = <2>;
