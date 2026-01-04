@@ -88,6 +88,7 @@ DEV_OBJS := $(patsubst $(DEV_SRC)/%.c, $(DEV_OUT)/%.o, $(wildcard $(DEV_SRC)/*.c
 deps += $(DEV_OBJS:%.o=%.o.d)
 
 OBJS_EXT += system.o
+OBJS_EXT += fdt_compat.o
 OBJS_EXT += dtc/libfdt/fdt.o dtc/libfdt/fdt_ro.o dtc/libfdt/fdt_rw.o dtc/libfdt/fdt_wip.o
 
 # Memory Layout Configuration
