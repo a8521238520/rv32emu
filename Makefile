@@ -162,6 +162,12 @@ LDFLAGS += $(KCONFIG_LDFLAGS)
 OBJS_EXT :=
 deps :=
 
+# Track build configuration changes for feature flags (e.g., ENABLE_SYSTEM).
+CONFIG_STAMP := $(OUT)/config.stamp
+$(CONFIG_STAMP): | $(OUT)
+	@printf '%s\n' "$(CFLAGS)" > $@.tmp
+	@if [ ! -f $@ ] || ! cmp -s $@.tmp $@; then mv $@.tmp $@; else rm $@.tmp; fi
+
 # Feature Flags from Kconfig
 
 # Convert Kconfig options to RV32_FEATURE_* compiler flags
@@ -365,7 +371,7 @@ $(OBJS): $(GDBSTUB_LIB)
 endif
 
 # Compilation rules
-$(OUT)/%.o: src/%.c $(deps_emcc) $(CONFIG_HEADER) | $(OUT)
+$(OUT)/%.o: src/%.c $(deps_emcc) $(CONFIG_HEADER) $(CONFIG_STAMP) | $(OUT)
 	$(Q)mkdir -p $(dir $@)
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) $(CFLAGS_emcc) -c -MMD -MF $@.d $<

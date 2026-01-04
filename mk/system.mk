@@ -52,7 +52,7 @@ $(BUILD_DTB2C): $(BIN_TO_C) $(BUILD_DTB)
 $(DEV_OUT):
 	$(Q)mkdir -p $@
 
-$(DEV_OUT)/%.o: $(DEV_SRC)/%.c | $(DEV_OUT)
+$(DEV_OUT)/%.o: $(DEV_SRC)/%.c $(CONFIG_STAMP) | $(DEV_OUT)
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) $(CFLAGS_emcc) -c -MMD -MF $@.d $<
 
