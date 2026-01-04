@@ -20,12 +20,17 @@ DEV_SRC := src/devices
 DEV_OUT := $(OUT)/devices
 
 DTC ?= dtc
+DTC_PATH := $(shell command -v $(DTC) 2>/dev/null)
 BUILD_DTB := $(OUT)/minimal.dtb
 
 # Device Tree compilation
 $(BUILD_DTB): $(DEV_SRC)/minimal.dts | $(OUT)
 	$(VECHO) " DTC\t$@\n"
-	$(Q)$(CC) -nostdinc -E -P -x assembler-with-cpp -undef $(CFLAGS_dt) $^ | $(DTC) - > $@
+	$(Q)if [ -z "$(DTC_PATH)" ]; then \
+		echo "Error: dtc (device tree compiler) not found. Install device-tree-compiler (e.g., apt-get install device-tree-compiler)."; \
+		exit 127; \
+	fi
+	$(Q)$(CC) -nostdinc -E -P -x assembler-with-cpp -undef $(CFLAGS_dt) $^ | $(DTC_PATH) - > $@
 
 # Native compiler for build tools (emcc generates wasm, need native for tools)
 NATIVE_CC := $(shell which gcc 2>/dev/null || which clang 2>/dev/null)
