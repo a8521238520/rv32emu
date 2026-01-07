@@ -307,6 +307,50 @@ static char *realloc_property(char *fdt,
     return fdt;
 }
 
+__attribute__((weak)) const char *fdt_strerror(int err)
+{
+    switch (err) {
+    case FDT_ERR_NOTFOUND:
+        return "not found";
+    case FDT_ERR_EXISTS:
+        return "exists";
+    case FDT_ERR_NOSPACE:
+        return "no space";
+    case FDT_ERR_BADOFFSET:
+        return "bad offset";
+    case FDT_ERR_BADPATH:
+        return "bad path";
+    case FDT_ERR_BADPHANDLE:
+        return "bad phandle";
+    case FDT_ERR_BADSTATE:
+        return "bad state";
+    case FDT_ERR_TRUNCATED:
+        return "truncated";
+    case FDT_ERR_BADMAGIC:
+        return "bad magic";
+    case FDT_ERR_BADVERSION:
+        return "bad version";
+    case FDT_ERR_BADSTRUCTURE:
+        return "bad structure";
+    case FDT_ERR_BADLAYOUT:
+        return "bad layout";
+    case FDT_ERR_INTERNAL:
+        return "internal";
+    case FDT_ERR_BADNCELLS:
+        return "bad number of cells";
+    case FDT_ERR_BADVALUE:
+        return "bad value";
+    case FDT_ERR_BADOVERLAY:
+        return "bad overlay";
+    case FDT_ERR_NOPHANDLES:
+        return "no phandles";
+    case FDT_ERR_BADFLAGS:
+        return "bad flags";
+    default:
+        return "unknown";
+    }
+}
+
 static void load_dtb(char **ram_loc, vm_attr_t *attr)
 {
 #include "minimal_dtb.h"
@@ -320,15 +364,32 @@ static void load_dtb(char **ram_loc, vm_attr_t *attr)
 
 #define DTB_EXPAND_SIZE 1024 /* or more if needed */
 
+    int header_err = fdt_check_header(minimal);
+    if (header_err != 0) {
+        rv_log_error("minimal DTB header check failed: %s (%d)\n",
+                     fdt_strerror(header_err), header_err);
+        rv_log_error(
+            "Regenerate minimal_dtb.h by rerunning the system build.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t minimal_len = fdt_totalsize(minimal);
+    if (minimal_len > ARRAY_SIZE(minimal)) {
+        rv_log_error("minimal DTB size mismatch (totalsize %zu > blob %zu)\n",
+                     minimal_len, ARRAY_SIZE(minimal));
+        rv_log_error(
+            "Regenerate minimal_dtb.h by rerunning the system build.\n");
+        exit(EXIT_FAILURE);
+    }
+
     /* Allocate enough memory for DTB + extra room */
-    size_t minimal_len = ARRAY_SIZE(minimal);
     void *dtb_buf = calloc(minimal_len + DTB_EXPAND_SIZE, sizeof(uint8_t));
     assert(dtb_buf);
 
     /* Expand it to a usable DTB blob */
     err = fdt_open_into(minimal, dtb_buf, minimal_len + DTB_EXPAND_SIZE);
     if (err < 0) {
-        rv_log_error("fdt_open_into fails\n");
+        rv_log_error("fdt_open_into failed: %s (%d)\n", fdt_strerror(err), err);
         exit(EXIT_FAILURE);
     }
 
@@ -520,6 +581,11 @@ static void rv_fsync_device()
         free(attr->vblk);
         free(attr->disk);
     }
+
+    if (attr->vrng.rng_fd >= 0) {
+        close(attr->vrng.rng_fd);
+        attr->vrng.rng_fd = -1;
+    }
 }
 #endif /* RV32_HAS(SYSTEM) && !RV32_HAS(ELF_LOADER) */
 
@@ -700,6 +766,10 @@ riscv_t *rv_create(riscv_user_t rv_attr)
     assert(attr->uart);
     attr->uart->in_fd = attr->fd_stdin;
     attr->uart->out_fd = attr->fd_stdout;
+
+    /* setup virtio-rng */
+    attr->vrng.ram = (uint32_t *) attr->mem->mem_base;
+    virtio_rng_init(&attr->vrng);
 
     /* setup virtio-blk */
     attr->vblk_mmio_base_hi = 0x41;

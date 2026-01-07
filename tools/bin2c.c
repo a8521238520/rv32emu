@@ -55,6 +55,11 @@ int main(int argc, char *argv[])
 
     fseek(ihandle, 0L, SEEK_END);  // get the file size
     iSize = (int) ftell(ihandle);
+    if (iSize <= 0) {
+        fprintf(stderr, "Input file is empty: %s\n", argv[1]);
+        fclose(ihandle);
+        return -1;
+    }
     fseek(ihandle, 0, SEEK_SET);
     p = (unsigned char *) malloc(0x10000);  // allocate 64k to play with
     GetLeafName(argv[1], szLeaf);
