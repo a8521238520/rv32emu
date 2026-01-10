@@ -71,6 +71,12 @@
             interrupts = <2>;
         };
 
+        virtio@b100000 {
+            compatible = "virtio,mmio";
+            reg = <0xb100000 0x200>;
+            interrupts = <3>;
+        };
+
         /*
          * Virtio block example subnode
          * The actual subnode are generated dynamically depends on the CLI -x vblk option

@@ -41,6 +41,16 @@ void emu_update_vrng_interrupts(riscv_t *rv)
         attr->plic->active &= ~IRQ_VRNG_BIT;
     plic_update_interrupts(attr->plic);
 }
+
+void emu_update_vnet_interrupts(riscv_t *rv)
+{
+    vm_attr_t *attr = PRIV(rv);
+    if (attr->vnet.interrupt_status)
+        attr->plic->active |= IRQ_VNET_BIT;
+    else
+        attr->plic->active &= ~IRQ_VNET_BIT;
+    plic_update_interrupts(attr->plic);
+}
 #endif
 
 static bool ppn_is_valid(riscv_t *rv, uint32_t ppn)

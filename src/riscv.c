@@ -586,6 +586,11 @@ static void rv_fsync_device()
         close(attr->vrng.rng_fd);
         attr->vrng.rng_fd = -1;
     }
+
+    if (attr->vnet.tap_fd >= 0) {
+        close(attr->vnet.tap_fd);
+        attr->vnet.tap_fd = -1;
+    }
 }
 #endif /* RV32_HAS(SYSTEM) && !RV32_HAS(ELF_LOADER) */
 
@@ -770,6 +775,10 @@ riscv_t *rv_create(riscv_user_t rv_attr)
     /* setup virtio-rng */
     attr->vrng.ram = (uint32_t *) attr->mem->mem_base;
     virtio_rng_init(&attr->vrng);
+
+    /* setup virtio-net */
+    attr->vnet.ram = (uint32_t *) attr->mem->mem_base;
+    virtio_net_init(&attr->vnet, attr->data.system.vnet_tap);
 
     /* setup virtio-blk */
     attr->vblk_mmio_base_hi = 0x41;
