@@ -42,14 +42,15 @@ extern struct target_ops gdbstub_ops;
 #define IF_rs2(i, r) (i->rs2 == rv_reg_##r)
 #define IF_imm(i, v) (i->imm == v)
 
+bool need_retranslate = false;
+bool need_handle_signal = false;
+
 #if RV32_HAS(SYSTEM)
 #if !RV32_HAS(JIT)
 static bool need_clear_block_map = false;
 #endif
 static uint32_t reloc_enable_mmu_jalr_addr;
 static bool reloc_enable_mmu = false;
-bool need_retranslate = false;
-bool need_handle_signal = false;
 #endif
 
 /* Emulate misaligned load operation.

@@ -477,6 +477,7 @@ typedef struct {
     char *bootargs;
     char **vblk_device;
     int vblk_device_cnt;
+    char *vnet_tap;
 } vm_system_t;
 #endif /* RV32_HAS(SYSTEM) */
 
@@ -505,6 +506,12 @@ typedef struct {
     uint32_t vblk_mmio_max_hi;
     int vblk_irq_base;
     int vblk_cnt;
+
+    /* virtio-rng device */
+    virtio_rng_state_t vrng;
+
+    /* virtio-net device */
+    virtio_net_state_t vnet;
 #endif /* RV32_HAS(SYSTEM) && !RV32_HAS(ELF_LOADER) */
 
     /* vm memory object */

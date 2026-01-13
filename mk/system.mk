@@ -20,12 +20,36 @@ DEV_SRC := src/devices
 DEV_OUT := $(OUT)/devices
 
 DTC ?= dtc
+DTC_PATH := $(shell command -v $(DTC) 2>/dev/null)
 BUILD_DTB := $(OUT)/minimal.dtb
+_CLEAN_EMPTY_DTB := $(shell [ -f "$(BUILD_DTB)" ] && [ ! -s "$(BUILD_DTB)" ] && rm -f "$(BUILD_DTB)")
 
 # Device Tree compilation
-$(BUILD_DTB): $(DEV_SRC)/minimal.dts | $(OUT)
+$(BUILD_DTB): $(DEV_SRC)/minimal.dts $(CONFIG_STAMP) | $(OUT)
 	$(VECHO) " DTC\t$@\n"
-	$(Q)$(CC) -nostdinc -E -P -x assembler-with-cpp -undef $(CFLAGS_dt) $^ | $(DTC) - > $@
+	$(Q)if [ -z "$(DTC_PATH)" ]; then \
+		echo "Error: dtc (device tree compiler) not found. Install device-tree-compiler (e.g., apt-get install device-tree-compiler)."; \
+		exit 127; \
+	fi
+	$(Q)pp="$(OUT)/minimal.dts.pp"; \
+	$(CC) -nostdinc -E -P -x assembler-with-cpp -undef $(CFLAGS_dt) $< > $$pp; \
+	if [ ! -s "$$pp" ]; then \
+		echo "Error: preprocessed DTS is empty. Check the DTS/CFLAGS_dt preprocessing output."; \
+		rm -f "$$pp" "$@"; \
+		exit 1; \
+	fi; \
+	$(DTC_PATH) -I dts -O dtb -o "$@" "$$pp"; \
+	status=$$?; \
+	rm -f "$$pp"; \
+	if [ $$status -ne 0 ]; then \
+		rm -f "$@"; \
+		exit $$status; \
+	fi; \
+	if [ ! -s "$@" ]; then \
+		echo "Error: generated DTB is empty. Check the DTS/DTC output above."; \
+		rm -f "$@"; \
+		exit 1; \
+	fi
 
 # Native compiler for build tools (emcc generates wasm, need native for tools)
 NATIVE_CC := $(shell which gcc 2>/dev/null || which clang 2>/dev/null)
@@ -39,15 +63,24 @@ else
 endif
 
 BUILD_DTB2C := src/minimal_dtb.h
-$(BUILD_DTB2C): $(BIN_TO_C) $(BUILD_DTB)
+_CLEAN_EMPTY_DTB2C := $(shell [ -f "$(BUILD_DTB2C)" ] && [ ! -s "$(BUILD_DTB2C)" ] && rm -f "$(BUILD_DTB2C)")
+$(BUILD_DTB2C): $(BIN_TO_C) $(BUILD_DTB) $(CONFIG_STAMP)
 	$(VECHO) "  BIN2C\t$@\n"
 	$(Q)$(BIN_TO_C) $(BUILD_DTB) > $@
+
+.PHONY: dtb2c-check
+dtb2c-check: $(BUILD_DTB2C)
+	$(Q)if [ ! -s "$(BUILD_DTB2C)" ]; then \
+		echo "Error: generated minimal_dtb.h is empty. Removing and aborting so it can be regenerated."; \
+		rm -f "$(BUILD_DTB2C)"; \
+		exit 1; \
+	fi
 
 # Device object compilation
 $(DEV_OUT):
 	$(Q)mkdir -p $@
 
-$(DEV_OUT)/%.o: $(DEV_SRC)/%.c | $(DEV_OUT)
+$(DEV_OUT)/%.o: $(DEV_SRC)/%.c $(CONFIG_STAMP) | $(DEV_OUT)
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) $(CFLAGS_emcc) -c -MMD -MF $@.d $<
 
