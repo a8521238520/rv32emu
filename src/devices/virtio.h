@@ -19,6 +19,7 @@
 #define VIRTIO_DESC_F_NEXT 1
 #define VIRTIO_DESC_F_WRITE 2
 
+#define VIRTIO_NET_DEV_ID 1
 #define VIRTIO_BLK_DEV_ID 2
 #define VIRTIO_RNG_DEV_ID 4
 #define VIRTIO_BLK_T_IN 0
@@ -37,8 +38,16 @@
 /* TODO: support more features */
 #define VIRTIO_BLK_F_RO (1 << 5)
 
+#define VIRTIO_NET_F_MAC (1 << 5)
+#define VIRTIO_NET_F_STATUS (1 << 16)
+
+#define VIRTIO_NET_S_LINK_UP 1
+
 #define IRQ_VRNG_SHIFT 2
 #define IRQ_VRNG_BIT (1 << IRQ_VRNG_SHIFT)
+
+#define IRQ_VNET_SHIFT 3
+#define IRQ_VNET_BIT (1 << IRQ_VNET_SHIFT)
 
 /* VirtIO MMIO registers */
 #define VIRTIO_REG_LIST                  \
@@ -92,6 +101,15 @@ typedef struct {
 } virtio_blk_queue_t;
 
 typedef struct {
+    uint32_t queue_num;
+    uint32_t queue_desc;
+    uint32_t queue_avail;
+    uint32_t queue_used;
+    uint16_t last_avail;
+    bool ready;
+} virtio_net_queue_t;
+
+typedef struct {
     /* feature negotiation */
     uint32_t device_features;
     uint32_t device_features_sel;
@@ -123,6 +141,36 @@ uint32_t *virtio_blk_init(virtio_blk_state_t *vblk,
 virtio_blk_state_t *vblk_new();
 
 void vblk_delete(virtio_blk_state_t *vblk);
+
+PACKED(struct virtio_net_config {
+    uint8_t mac[6];
+    uint16_t status;
+});
+
+typedef struct {
+    /* feature negotiation */
+    uint32_t device_features;
+    uint32_t device_features_sel;
+    uint32_t driver_features;
+    uint32_t driver_features_sel;
+    /* queue config */
+    uint32_t queue_sel;
+    virtio_net_queue_t queues[2];
+    /* status */
+    uint32_t status;
+    uint32_t interrupt_status;
+    /* supplied by environment */
+    uint32_t *ram;
+    int tap_fd;
+    /* implementation-specific */
+    struct virtio_net_config config;
+} virtio_net_state_t;
+
+uint32_t virtio_net_read(virtio_net_state_t *vnet, uint32_t addr);
+
+void virtio_net_write(virtio_net_state_t *vnet, uint32_t addr, uint32_t value);
+
+void virtio_net_init(virtio_net_state_t *vnet, const char *tap_name);
 
 typedef struct {
     uint32_t queue_num;

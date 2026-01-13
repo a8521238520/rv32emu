@@ -66,6 +66,7 @@ static char *opt_bootargs;
 #define VBLK_DEV_MAX 100
 static char *opt_virtio_blk_img[VBLK_DEV_MAX];
 static int opt_virtio_blk_idx = 0;
+static char *opt_virtio_net_tap;
 #endif
 
 static void print_usage(const char *filename)
@@ -87,6 +88,7 @@ static void print_usage(const char *filename)
         "<image> as virtio-blk disk image "
         "(default read and write). This option may be specified "
         "multiple times for multiple block devices\n"
+        "  -x vnet:<tap> : use <tap> as virtio-net TAP interface\n"
         "  -b <bootargs> : use customized <bootargs> for the kernel\n"
 #endif
         "  -d [filename]: dump registers as JSON to the "
@@ -141,6 +143,8 @@ static bool parse_args(int argc, char **args)
             if (!strncmp("vblk:", optarg, 5))
                 opt_virtio_blk_img[opt_virtio_blk_idx++] =
                     optarg + 5; /* strlen("vblk:") */
+            else if (!strncmp("vnet:", optarg, 5))
+                opt_virtio_net_tap = optarg + 5;
             else
                 return false;
             emu_argc++;
@@ -307,7 +311,9 @@ int main(int argc, char **args)
         attr.data.system.vblk_device_cnt = opt_virtio_blk_idx;
     } else {
         attr.data.system.vblk_device = NULL;
+        attr.data.system.vblk_device_cnt = 0;
     }
+    attr.data.system.vnet_tap = opt_virtio_net_tap;
 #else
     attr.data.user.elf_program = opt_prog_name;
 #endif

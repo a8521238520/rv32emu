@@ -30,6 +30,7 @@ enum SUPPORTED_MMIO {
     MMIO_UART,
     MMIO_VIRTIOBLK,
     MMIO_VIRTIORNG,
+    MMIO_VIRTIONET,
 };
 
 /* clang-format off */
@@ -79,6 +80,17 @@ enum SUPPORTED_MMIO {
                 return;                                                          \
             )                                                                    \
             break;                                                               \
+        case MMIO_VIRTIONET:                                                     \
+            IIF(rw)( /* read */                                                  \
+                mmio_read_val = virtio_net_read(&PRIV(rv)->vnet, addr & 0xFFFFF); \
+                emu_update_vnet_interrupts(rv);                                  \
+                return mmio_read_val;                                            \
+                ,    /* write */                                                 \
+                virtio_net_write(&PRIV(rv)->vnet, addr & 0xFFFFF, val);           \
+                emu_update_vnet_interrupts(rv);                                  \
+                return;                                                          \
+            )                                                                    \
+            break;                                                               \
         default:                                                                 \
             rv_log_error("unknown MMIO type %d\n", io);                          \
             break;                                                               \
@@ -98,6 +110,8 @@ enum SUPPORTED_MMIO {
                 MMIO_OP(MMIO_VIRTIOBLK, MMIO_R);                      \
             } else if (hi == 0xB0) {                                  \
                 MMIO_OP(MMIO_VIRTIORNG, MMIO_R);                       \
+            } else if (hi == 0xB1) {                                  \
+                MMIO_OP(MMIO_VIRTIONET, MMIO_R);                       \
             } else {                                                  \
                 switch (hi) {                                         \
                 case 0x0:                                             \
@@ -127,6 +141,8 @@ enum SUPPORTED_MMIO {
                 MMIO_OP(MMIO_VIRTIOBLK, MMIO_W);                      \
             } else if (hi == 0xB0) {                                  \
                 MMIO_OP(MMIO_VIRTIORNG, MMIO_W);                       \
+            } else if (hi == 0xB1) {                                  \
+                MMIO_OP(MMIO_VIRTIONET, MMIO_W);                       \
             } else {                                                  \
                 switch (hi) {                                         \
                 case 0x0:                                             \
@@ -147,6 +163,7 @@ enum SUPPORTED_MMIO {
 void emu_update_uart_interrupts(riscv_t *rv);
 void emu_update_vblk_interrupts(riscv_t *rv);
 void emu_update_vrng_interrupts(riscv_t *rv);
+void emu_update_vnet_interrupts(riscv_t *rv);
 
 #define CHECK_PENDING_SIGNAL(rv, signal_flag)              \
     do {                                                   \
