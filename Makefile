@@ -190,6 +190,7 @@ $(call set-feature, Zbc)
 $(call set-feature, Zbs)
 $(call set-feature, SDL)
 $(call set-feature, SDL_MIXER)
+$(call set-feature, VIRTIOSND)
 $(call set-feature, GDBSTUB)
 $(call set-feature, JIT)
 # Note: T2C is set conditionally after LLVM detection in JIT section
@@ -251,6 +252,19 @@ ifneq ("$(CC_IS_EMCC)", "1")
                 $(warning SDL2_mixer not found. Audio disabled.)
             endif
         endif
+    endif
+endif
+endif
+
+# Extension: VirtIO Sound
+
+ifeq ($(CONFIG_VIRTIOSND),y)
+ifneq ("$(CC_IS_EMCC)", "1")
+    ifeq ($(HAVE_PORTAUDIO),y)
+        CFLAGS += $(PORTAUDIO_CFLAGS)
+        LDFLAGS += $(PORTAUDIO_LIBS) -pthread
+    else
+        $(warning PortAudio not found. VirtIO sound disabled.)
     endif
 endif
 endif

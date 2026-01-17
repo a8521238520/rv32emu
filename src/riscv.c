@@ -591,6 +591,10 @@ static void rv_fsync_device()
         close(attr->vnet.tap_fd);
         attr->vnet.tap_fd = -1;
     }
+
+#if RV32_HAS(VIRTIOSND)
+    virtio_snd_shutdown(&attr->vsnd);
+#endif
 }
 #endif /* RV32_HAS(SYSTEM) && !RV32_HAS(ELF_LOADER) */
 
@@ -779,6 +783,13 @@ riscv_t *rv_create(riscv_user_t rv_attr)
     /* setup virtio-net */
     attr->vnet.ram = (uint32_t *) attr->mem->mem_base;
     virtio_net_init(&attr->vnet, attr->data.system.vnet_tap);
+
+#if RV32_HAS(VIRTIOSND)
+    /* setup virtio-snd */
+    attr->vsnd.ram = (uint32_t *) attr->mem->mem_base;
+    if (!virtio_snd_init(&attr->vsnd))
+        rv_log_warn("virtio-snd not available");
+#endif
 
     /* setup virtio-blk */
     attr->vblk_mmio_base_hi = 0x41;
