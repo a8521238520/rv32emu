@@ -78,6 +78,7 @@ $(eval $(call enable-to-config,UBSAN))
 # Graphics and audio
 $(eval $(call enable-to-config,SDL))
 $(eval $(call enable-to-config,SDL_MIXER))
+$(eval $(call enable-to-config,VIRTIOSND))
 
 # Testing
 $(eval $(call enable-to-config,ARCH_TEST))

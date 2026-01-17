@@ -298,6 +298,14 @@ config SDL_MIXER
       Enable SDL2_mixer for audio playback.
       Supports WAV and MIDI formats.
 
+config VIRTIOSND
+    bool "VirtIO Sound Device"
+    default n
+    depends on SYSTEM && !ELF_LOADER && HAVE_PORTAUDIO && !CC_IS_EMCC
+    help
+      Enable virtio-snd emulation using PortAudio.
+      Requires system emulation mode and PortAudio development libraries.
+
 endmenu
 
 # Testing

@@ -67,6 +67,11 @@
 #define RV32_FEATURE_SDL 1
 #endif
 
+/* Virtio-snd device */
+#ifndef RV32_FEATURE_VIRTIOSND
+#define RV32_FEATURE_VIRTIOSND 0
+#endif
+
 /* GDB remote debugging */
 #ifndef RV32_FEATURE_GDBSTUB
 #define RV32_FEATURE_GDBSTUB 0

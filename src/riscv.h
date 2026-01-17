@@ -512,6 +512,11 @@ typedef struct {
 
     /* virtio-net device */
     virtio_net_state_t vnet;
+
+#if RV32_HAS(VIRTIOSND)
+    /* virtio-snd device */
+    virtio_snd_state_t vsnd;
+#endif
 #endif /* RV32_HAS(SYSTEM) && !RV32_HAS(ELF_LOADER) */
 
     /* vm memory object */

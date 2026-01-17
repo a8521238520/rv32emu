@@ -31,6 +31,9 @@ enum SUPPORTED_MMIO {
     MMIO_VIRTIOBLK,
     MMIO_VIRTIORNG,
     MMIO_VIRTIONET,
+#if RV32_HAS(VIRTIOSND)
+    MMIO_VIRTIOSND,
+#endif
 };
 
 /* clang-format off */
@@ -91,6 +94,20 @@ enum SUPPORTED_MMIO {
                 return;                                                          \
             )                                                                    \
             break;                                                               \
+#if RV32_HAS(VIRTIOSND)                                                          \
+        case MMIO_VIRTIOSND:                                                     \
+            IIF(rw)( /* read */                                                  \
+                mmio_read_val =                                                   \
+                    virtio_snd_read(&PRIV(rv)->vsnd, addr & 0xFFFFF);             \
+                emu_update_vsnd_interrupts(rv);                                  \
+                return mmio_read_val;                                            \
+                ,    /* write */                                                 \
+                virtio_snd_write(&PRIV(rv)->vsnd, addr & 0xFFFFF, val);           \
+                emu_update_vsnd_interrupts(rv);                                  \
+                return;                                                          \
+            )                                                                    \
+            break;                                                               \
+#endif                                                                           \
         default:                                                                 \
             rv_log_error("unknown MMIO type %d\n", io);                          \
             break;                                                               \
@@ -112,6 +129,10 @@ enum SUPPORTED_MMIO {
                 MMIO_OP(MMIO_VIRTIORNG, MMIO_R);                       \
             } else if (hi == 0xB1) {                                  \
                 MMIO_OP(MMIO_VIRTIONET, MMIO_R);                       \
+#if RV32_HAS(VIRTIOSND)                                                \
+            } else if (hi == 0xB2) {                                  \
+                MMIO_OP(MMIO_VIRTIOSND, MMIO_R);                       \
+#endif                                                                 \
             } else {                                                  \
                 switch (hi) {                                         \
                 case 0x0:                                             \
@@ -143,6 +164,10 @@ enum SUPPORTED_MMIO {
                 MMIO_OP(MMIO_VIRTIORNG, MMIO_W);                       \
             } else if (hi == 0xB1) {                                  \
                 MMIO_OP(MMIO_VIRTIONET, MMIO_W);                       \
+#if RV32_HAS(VIRTIOSND)                                                \
+            } else if (hi == 0xB2) {                                  \
+                MMIO_OP(MMIO_VIRTIOSND, MMIO_W);                       \
+#endif                                                                 \
             } else {                                                  \
                 switch (hi) {                                         \
                 case 0x0:                                             \
@@ -164,6 +189,9 @@ void emu_update_uart_interrupts(riscv_t *rv);
 void emu_update_vblk_interrupts(riscv_t *rv);
 void emu_update_vrng_interrupts(riscv_t *rv);
 void emu_update_vnet_interrupts(riscv_t *rv);
+#if RV32_HAS(VIRTIOSND)
+void emu_update_vsnd_interrupts(riscv_t *rv);
+#endif
 
 #define CHECK_PENDING_SIGNAL(rv, signal_flag)              \
     do {                                                   \

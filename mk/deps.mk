@@ -65,9 +65,17 @@ ifeq ($(HAVE_SDL2_MIXER),y)
     SDL2_MIXER_LIBS := $(call dep,libs,SDL2_mixer)
 endif
 
+# PortAudio
+HAVE_PORTAUDIO := $(shell $(PKG_CONFIG) --exists portaudio-2.0 $(DEVNULL) && echo y)
+ifeq ($(HAVE_PORTAUDIO),y)
+    PORTAUDIO_CFLAGS := $(call dep,cflags,portaudio-2.0)
+    PORTAUDIO_LIBS := $(call dep,libs,portaudio-2.0)
+endif
+
 # Export for Kconfig
 export HAVE_SDL2
 export HAVE_SDL2_MIXER
+export HAVE_PORTAUDIO
 
 # SHA Utilities
 

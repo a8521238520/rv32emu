@@ -22,6 +22,7 @@
 #define VIRTIO_NET_DEV_ID 1
 #define VIRTIO_BLK_DEV_ID 2
 #define VIRTIO_RNG_DEV_ID 4
+#define VIRTIO_SND_DEV_ID 25
 #define VIRTIO_BLK_T_IN 0
 #define VIRTIO_BLK_T_OUT 1
 #define VIRTIO_BLK_T_FLUSH 4
@@ -48,6 +49,9 @@
 
 #define IRQ_VNET_SHIFT 3
 #define IRQ_VNET_BIT (1 << IRQ_VNET_SHIFT)
+
+#define IRQ_VSND_SHIFT 4
+#define IRQ_VSND_BIT (1 << IRQ_VSND_SHIFT)
 
 /* VirtIO MMIO registers */
 #define VIRTIO_REG_LIST                  \
@@ -202,3 +206,39 @@ uint32_t virtio_rng_read(virtio_rng_state_t *vrng, uint32_t addr);
 void virtio_rng_write(virtio_rng_state_t *vrng, uint32_t addr, uint32_t value);
 
 void virtio_rng_init(virtio_rng_state_t *vrng);
+
+typedef struct {
+    uint32_t queue_num;
+    uint32_t queue_desc;
+    uint32_t queue_avail;
+    uint32_t queue_used;
+    uint16_t last_avail;
+    bool ready;
+} virtio_snd_queue_t;
+
+typedef struct {
+    /* feature negotiation */
+    uint32_t device_features;
+    uint32_t device_features_sel;
+    uint32_t driver_features;
+    uint32_t driver_features_sel;
+    /* queue config */
+    uint32_t queue_sel;
+    virtio_snd_queue_t queues[4];
+    /* status */
+    uint32_t status;
+    uint32_t interrupt_status;
+    bool initialized;
+    /* supplied by environment */
+    uint32_t *ram;
+    /* implementation-specific */
+    void *priv;
+} virtio_snd_state_t;
+
+uint32_t virtio_snd_read(virtio_snd_state_t *vsnd, uint32_t addr);
+
+void virtio_snd_write(virtio_snd_state_t *vsnd, uint32_t addr, uint32_t value);
+
+bool virtio_snd_init(virtio_snd_state_t *vsnd);
+
+void virtio_snd_shutdown(virtio_snd_state_t *vsnd);
