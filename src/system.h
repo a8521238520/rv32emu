@@ -37,6 +37,24 @@ enum SUPPORTED_MMIO {
 };
 
 /* clang-format off */
+#if RV32_HAS(VIRTIOSND)
+#define MMIO_OP_VIRTIOSND(rw)                                                    \
+        case MMIO_VIRTIOSND:                                                     \
+            IIF(rw)( /* read */                                                  \
+                mmio_read_val =                                                   \
+                    virtio_snd_read(&PRIV(rv)->vsnd, addr & 0xFFFFF);             \
+                emu_update_vsnd_interrupts(rv);                                  \
+                return mmio_read_val;                                            \
+                ,    /* write */                                                 \
+                virtio_snd_write(&PRIV(rv)->vsnd, addr & 0xFFFFF, val);           \
+                emu_update_vsnd_interrupts(rv);                                  \
+                return;                                                          \
+            )                                                                    \
+            break;
+#else
+#define MMIO_OP_VIRTIOSND(rw)
+#endif
+
 #define MMIO_OP(io, rw)                                                          \
     switch(io){                                                                  \
         case MMIO_PLIC:                                                          \
@@ -94,25 +112,20 @@ enum SUPPORTED_MMIO {
                 return;                                                          \
             )                                                                    \
             break;                                                               \
-#if RV32_HAS(VIRTIOSND)                                                          \
-        case MMIO_VIRTIOSND:                                                     \
-            IIF(rw)( /* read */                                                  \
-                mmio_read_val =                                                   \
-                    virtio_snd_read(&PRIV(rv)->vsnd, addr & 0xFFFFF);             \
-                emu_update_vsnd_interrupts(rv);                                  \
-                return mmio_read_val;                                            \
-                ,    /* write */                                                 \
-                virtio_snd_write(&PRIV(rv)->vsnd, addr & 0xFFFFF, val);           \
-                emu_update_vsnd_interrupts(rv);                                  \
-                return;                                                          \
-            )                                                                    \
-            break;                                                               \
-#endif                                                                           \
+        MMIO_OP_VIRTIOSND(rw)                                                    \
         default:                                                                 \
             rv_log_error("unknown MMIO type %d\n", io);                          \
             break;                                                               \
     }
 /* clang-format on */
+
+#if RV32_HAS(VIRTIOSND)
+#define MMIO_READ_VIRTIOSND()             \
+            } else if (hi == 0xB2) {      \
+                MMIO_OP(MMIO_VIRTIOSND, MMIO_R);
+#else
+#define MMIO_READ_VIRTIOSND()
+#endif
 
 #define MMIO_READ()                                                   \
     do {                                                              \
@@ -126,17 +139,14 @@ enum SUPPORTED_MMIO {
                     PRIV(rv)->vblk[hi - PRIV(rv)->vblk_mmio_base_hi]; \
                 MMIO_OP(MMIO_VIRTIOBLK, MMIO_R);                      \
             } else if (hi == 0xB0) {                                  \
-                MMIO_OP(MMIO_VIRTIORNG, MMIO_R);                       \
+                MMIO_OP(MMIO_VIRTIORNG, MMIO_R);                      \
             } else if (hi == 0xB1) {                                  \
-                MMIO_OP(MMIO_VIRTIONET, MMIO_R);                       \
-#if RV32_HAS(VIRTIOSND)                                                \
-            } else if (hi == 0xB2) {                                  \
-                MMIO_OP(MMIO_VIRTIOSND, MMIO_R);                       \
-#endif                                                                 \
+                MMIO_OP(MMIO_VIRTIONET, MMIO_R);                      \
+            MMIO_READ_VIRTIOSND()                                     \
             } else {                                                  \
                 switch (hi) {                                         \
                 case 0x0:                                             \
-                case 0x2: /* PLIC (0 - 0x3F) */                       \
+                case 0x2: /* PLIC (0 - 0x3F) */                        \
                     MMIO_OP(MMIO_PLIC, MMIO_R);                       \
                     break;                                            \
                 case 0x40: /* UART */                                 \
@@ -150,6 +160,14 @@ enum SUPPORTED_MMIO {
         }                                                             \
     } while (0)
 
+#if RV32_HAS(VIRTIOSND)
+#define MMIO_WRITE_VIRTIOSND()            \
+            } else if (hi == 0xB2) {      \
+                MMIO_OP(MMIO_VIRTIOSND, MMIO_W);
+#else
+#define MMIO_WRITE_VIRTIOSND()
+#endif
+
 #define MMIO_WRITE()                                                  \
     do {                                                              \
         if ((addr >> 28) == 0xF) { /* MMIO at 0xF_______ */           \
@@ -161,17 +179,14 @@ enum SUPPORTED_MMIO {
                     PRIV(rv)->vblk[hi - PRIV(rv)->vblk_mmio_base_hi]; \
                 MMIO_OP(MMIO_VIRTIOBLK, MMIO_W);                      \
             } else if (hi == 0xB0) {                                  \
-                MMIO_OP(MMIO_VIRTIORNG, MMIO_W);                       \
+                MMIO_OP(MMIO_VIRTIORNG, MMIO_W);                      \
             } else if (hi == 0xB1) {                                  \
-                MMIO_OP(MMIO_VIRTIONET, MMIO_W);                       \
-#if RV32_HAS(VIRTIOSND)                                                \
-            } else if (hi == 0xB2) {                                  \
-                MMIO_OP(MMIO_VIRTIOSND, MMIO_W);                       \
-#endif                                                                 \
+                MMIO_OP(MMIO_VIRTIONET, MMIO_W);                      \
+            MMIO_WRITE_VIRTIOSND()                                    \
             } else {                                                  \
                 switch (hi) {                                         \
                 case 0x0:                                             \
-                case 0x2: /* PLIC (0 - 0x3F) */                       \
+                case 0x2: /* PLIC (0 - 0x3F) */                        \
                     MMIO_OP(MMIO_PLIC, MMIO_W);                       \
                     break;                                            \
                 case 0x40: /* UART */                                 \
