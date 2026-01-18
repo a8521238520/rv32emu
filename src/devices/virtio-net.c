@@ -314,9 +314,11 @@ static void virtio_queue_notify_handler(virtio_net_state_t *vnet, int index)
 
 uint32_t virtio_net_read(virtio_net_state_t *vnet, uint32_t addr)
 {
-    addr = addr >> 2;
+    uint32_t reg = addr >> 2;
+    uint32_t config_base = VIRTIO_Config << 2;
+
 #define _(reg) VIRTIO_##reg
-    switch (addr) {
+    switch (reg) {
     case _(MagicValue):
         return VIRTIO_MAGIC_NUMBER;
     case _(Version):
@@ -339,17 +341,32 @@ uint32_t virtio_net_read(virtio_net_state_t *vnet, uint32_t addr)
         return vnet->status;
     case _(ConfigGeneration):
         return VIRTIO_CONFIG_GENERATE;
-    default:
-        return ((uint32_t *) &vnet->config)[addr - _(Config)];
+    default: {
+        if (addr < config_base)
+            return 0;
+
+        uint32_t offset = addr - config_base;
+        const uint8_t *config = (const uint8_t *) &vnet->config;
+        uint32_t value = 0;
+
+        for (uint32_t i = 0; i < sizeof(uint32_t); i++) {
+            uint32_t idx = offset + i;
+            if (idx < sizeof(vnet->config))
+                value |= ((uint32_t) config[idx]) << (8 * i);
+        }
+
+        return value;
+    }
     }
 #undef _
 }
 
 void virtio_net_write(virtio_net_state_t *vnet, uint32_t addr, uint32_t value)
 {
-    addr = addr >> 2;
+    uint32_t reg = addr >> 2;
+    uint32_t config_base = VIRTIO_Config << 2;
 #define _(reg) VIRTIO_##reg
-    switch (addr) {
+    switch (reg) {
     case _(DeviceFeaturesSel):
         vnet->device_features_sel = value;
         break;
@@ -410,7 +427,9 @@ void virtio_net_write(virtio_net_state_t *vnet, uint32_t addr, uint32_t value)
         virtio_net_update_status(vnet, value);
         break;
     default:
-        ((uint32_t *) &vnet->config)[addr - _(Config)] = value;
+        if (addr >= config_base && addr < config_base + sizeof(vnet->config))
+            return;
+        virtio_net_set_fail(vnet);
         break;
     }
 #undef _
