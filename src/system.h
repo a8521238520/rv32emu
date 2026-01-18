@@ -204,6 +204,7 @@ void emu_update_uart_interrupts(riscv_t *rv);
 void emu_update_vblk_interrupts(riscv_t *rv);
 void emu_update_vrng_interrupts(riscv_t *rv);
 void emu_update_vnet_interrupts(riscv_t *rv);
+void emu_poll_vnet(riscv_t *rv);
 #if RV32_HAS(VIRTIOSND)
 void emu_update_vsnd_interrupts(riscv_t *rv);
 #endif

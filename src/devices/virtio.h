@@ -176,6 +176,8 @@ void virtio_net_write(virtio_net_state_t *vnet, uint32_t addr, uint32_t value);
 
 void virtio_net_init(virtio_net_state_t *vnet, const char *tap_name);
 
+void virtio_net_poll(virtio_net_state_t *vnet);
+
 typedef struct {
     uint32_t queue_num;
     uint32_t queue_desc;

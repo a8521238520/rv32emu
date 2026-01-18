@@ -297,6 +297,17 @@ static void virtio_net_handle_rx(virtio_net_state_t *vnet)
     }
 }
 
+void virtio_net_poll(virtio_net_state_t *vnet)
+{
+    virtio_net_queue_t *queue = &vnet->queues[VNET_RX_QUEUE_IDX];
+    if (!(vnet->status & VIRTIO_STATUS_DRIVER_OK))
+        return;
+    if (!queue->ready)
+        return;
+
+    virtio_net_handle_rx(vnet);
+}
+
 static void virtio_queue_notify_handler(virtio_net_state_t *vnet, int index)
 {
     virtio_net_queue_t *queue = &vnet->queues[index];

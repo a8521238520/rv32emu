@@ -35,6 +35,10 @@ extern struct target_ops gdbstub_ops;
 #include "jit.h"
 #endif
 
+#if RV32_HAS(SYSTEM) && !RV32_HAS(ELF_LOADER)
+#include "system.h"
+#endif
+
 /* Shortcuts for comparing each field of specified RISC-V instruction */
 #define IF_insn(i, o) (i->opcode == rv_insn_##o)
 #define IF_rd(i, r) (i->rd == rv_reg_##r)
@@ -1940,6 +1944,7 @@ void rv_step(void *arg)
     /* loop until hitting the cycle target */
     while (rv->csr_cycle < cycles_target && !rv->halt) {
 #if RV32_HAS(SYSTEM) && !RV32_HAS(ELF_LOADER)
+        emu_poll_vnet(rv);
         /* check for any interrupt after every block emulation */
         rv_check_interrupt(rv);
 #endif

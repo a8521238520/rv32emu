@@ -52,6 +52,13 @@ void emu_update_vnet_interrupts(riscv_t *rv)
     plic_update_interrupts(attr->plic);
 }
 
+void emu_poll_vnet(riscv_t *rv)
+{
+    vm_attr_t *attr = PRIV(rv);
+    virtio_net_poll(&attr->vnet);
+    emu_update_vnet_interrupts(rv);
+}
+
 #if RV32_HAS(VIRTIOSND)
 void emu_update_vsnd_interrupts(riscv_t *rv)
 {
